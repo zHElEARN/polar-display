@@ -71,7 +71,7 @@ async def polar_main():
         console.print(f"[bold green]Received Data:[/bold green] {data}")
         loop = asyncio.get_event_loop()
         loop.create_task(
-            broadcast_message(json.dumps({"type": "ecg", "data": asdict(data)}))
+            broadcast_message(json.dumps({"type": "ecg" if isinstance(data, ECGData) else "acc", "data": asdict(data)}))
         )
 
     async with PolarDevice(device, data_callback, heartrate_callback) as polar_device:
@@ -93,7 +93,7 @@ async def polar_main():
         )
 
         await polar_device.start_stream(ecg_settings)
-        # await polar_device.start_stream(acc_settings)
+        await polar_device.start_stream(acc_settings)
 
         await polar_device.start_heartrate_stream()
 

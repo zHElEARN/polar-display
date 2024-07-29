@@ -1,67 +1,197 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Dynamic ECG with Chart.js and WebSocket</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-</head>
-<body>
-  <canvas id="ecgChart"></canvas>
-  <script>
-    var ctx = document.getElementById('ecgChart').getContext('2d');
-    var ecgData = [];
+    <head>
+        <meta charset="UTF-8" />
+        <title>Dynamic ECG and Acceleration with Chart.js and WebSocket</title>
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <style>
+            .controls {
+                margin-bottom: 20px;
+            }
+            .controls input {
+                margin-right: 10px;
+            }
+            .controls button {
+                margin-right: 10px;
+            }
+            .chart-container {
+                position: relative;
+                margin-bottom: 5vh;
+                height: 40vh;
+                width: 100vw;
+            }
+            #wsStatus {
+                margin-top: 10px;
+                font-weight: bold;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="controls">
+            <input type="text" id="wsAddress" placeholder="WebSocket Address" value="ws://localhost:8765" />
+            <button id="connectBtn">Connect</button>
+            <button id="disconnectBtn">Disconnect</button>
+            <div id="wsStatus">Status: Disconnected</div>
+        </div>
 
-    var ecgChart = new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels: [], // 初始化 x 轴标签
-        datasets: [{
-          label: 'ECG Signal',
-          data: ecgData,
-          borderColor: 'rgba(75, 192, 192, 1)',
-          borderWidth: 1,
-          fill: false,
-          pointRadius: 0,
-          pointHoverRadius: 0
-        }]
-      },
-      options: {
-        animation: false,
-        scales: {
-          x: { title: { display: true, text: 'Sample Index' } },
-          y: { title: { display: true, text: 'Voltage (µV)' } }
-        }
-      }
-    });
+        <div class="chart-container">
+            <canvas id="ecgChart"></canvas>
+        </div>
+        <div class="chart-container">
+            <canvas id="accChart"></canvas>
+        </div>
+        <script>
+            var ctxECG = document.getElementById("ecgChart");
+            var ctxACC = document.getElementById("accChart");
+            var ecgData = Array.from({ length: 1000 }, () => 0); // 初始化 1000 个数据点
+            var accXData = Array.from({ length: 1000 }, () => 0);
+            var accYData = Array.from({ length: 1000 }, () => 0);
+            var accZData = Array.from({ length: 1000 }, () => 0);
+            var socket;
 
-    function updateChart(newDataArray) {
-      ecgData.push(...newDataArray);
-      ecgData = ecgData.slice(-400); // 保持数据长度，避免图表过于庞大
-      ecgChart.data.labels = ecgData.map((_, index) => index); // 更新 x 轴标签
-      ecgChart.data.datasets[0].data = ecgData;
-      ecgChart.update('none');
-    }
+            var ecgChart = new Chart(ctxECG, {
+                type: "line",
+                data: {
+                    labels: ecgData.map((_, index) => index), // 初始化 x 轴标签
+                    datasets: [
+                        {
+                            label: "ECG Signal",
+                            data: ecgData,
+                            borderColor: "rgba(75, 192, 192, 1)",
+                            borderWidth: 1,
+                            fill: false,
+                            pointRadius: 0, // 隐藏数据点
+                            pointHoverRadius: 0, // 鼠标悬停时不显示数据点
+                        },
+                    ],
+                },
+                options: {
+                    maintainAspectRatio: false,
+                    animation: false, // 禁用动画
+                    scales: {
+                        x: {
+                            display: false, // 隐藏 x 轴标签
+                        },
+                        y: {
+                            title: { display: true, text: "Voltage (µV)" },
+                        },
+                    },
+                    plugins: {
+                        legend: { display: false }, // 隐藏图例
+                    },
+                },
+            });
 
-    var socket = new WebSocket('ws://localhost:8765');
+            var accChart = new Chart(ctxACC, {
+                type: "line",
+                data: {
+                    labels: accXData.map((_, index) => index), // 初始化 x 轴标签
+                    datasets: [
+                        {
+                            label: "Acc X",
+                            data: accXData,
+                            borderColor: "rgba(255, 99, 132, 1)",
+                            borderWidth: 1,
+                            fill: false,
+                            pointRadius: 0, // 隐藏数据点
+                            pointHoverRadius: 0, // 鼠标悬停时不显示数据点
+                        },
+                        {
+                            label: "Acc Y",
+                            data: accYData,
+                            borderColor: "rgba(54, 162, 235, 1)",
+                            borderWidth: 1,
+                            fill: false,
+                            pointRadius: 0, // 隐藏数据点
+                            pointHoverRadius: 0, // 鼠标悬停时不显示数据点
+                        },
+                        {
+                            label: "Acc Z",
+                            data: accZData,
+                            borderColor: "rgba(75, 192, 192, 1)",
+                            borderWidth: 1,
+                            fill: false,
+                            pointRadius: 0, // 隐藏数据点
+                            pointHoverRadius: 0, // 鼠标悬停时不显示数据点
+                        },
+                    ],
+                },
+                options: {
+                    maintainAspectRatio: false,
+                    animation: false, // 禁用动画
+                    scales: {
+                        x: {
+                            display: false, // 隐藏 x 轴标签
+                        },
+                        y: {
+                            title: { display: true, text: "Acceleration (mg)" },
+                        },
+                    },
+                },
+            });
 
-    socket.onopen = function(event) {
-      console.log('WebSocket is connected.');
-    };
+            function updateECGChart(newDataArray) {
+                ecgData.push(...newDataArray);
+                ecgData = ecgData.slice(-1000); // 保持数据长度，避免图表过于庞大
+                ecgChart.data.labels = ecgData.map((_, index) => index); // 更新 x 轴标签
+                ecgChart.data.datasets[0].data = ecgData;
+                ecgChart.update("none"); // 禁用更新动画
+            }
 
-    socket.onmessage = function(event) {
-      var message = JSON.parse(event.data);
-      if (message.type === 'ecg') {
-        updateChart(message.data.data);
-      }
-    };
+            function updateACCChart(newDataArray) {
+                newDataArray.forEach(([x, y, z]) => {
+                    accXData.push(x);
+                    accYData.push(y);
+                    accZData.push(z);
+                });
+                accXData = accXData.slice(-1000);
+                accYData = accYData.slice(-1000);
+                accZData = accZData.slice(-1000);
+                accChart.data.labels = accXData.map((_, index) => index); // 更新 x 轴标签
+                accChart.data.datasets[0].data = accXData;
+                accChart.data.datasets[1].data = accYData;
+                accChart.data.datasets[2].data = accZData;
+                accChart.update("none"); // 禁用更新动画
+            }
 
-    socket.onclose = function(event) {
-      console.log('WebSocket is closed.');
-    };
+            function connectWebSocket() {
+                var wsAddress = document.getElementById("wsAddress").value;
+                socket = new WebSocket(wsAddress);
 
-    socket.onerror = function(error) {
-      console.log('WebSocket error:', error);
-    };
-  </script>
-</body>
+                socket.onopen = function (event) {
+                    console.log("WebSocket is connected.");
+                    document.getElementById("wsStatus").textContent = "Status: Connected"; // 更新状态标签
+                };
+
+                socket.onmessage = function (event) {
+                    var message = JSON.parse(event.data);
+                    if (message.type === "ecg") {
+                        updateECGChart(message.data.data);
+                    } else if (message.type === "acc") {
+                        updateACCChart(message.data.data);
+                    }
+                };
+
+                socket.onclose = function (event) {
+                    console.log("WebSocket is closed.");
+                    document.getElementById("wsStatus").textContent = "Status: Disconnected"; // 更新状态标签
+                };
+
+                socket.onerror = function (error) {
+                    console.log("WebSocket error:", error);
+                    document.getElementById("wsStatus").textContent = "Status: Error"; // 更新状态标签
+                };
+            }
+
+            function disconnectWebSocket() {
+                if (socket) {
+                    socket.close();
+                    document.getElementById("wsStatus").textContent = "Status: Disconnected"; // 更新状态标签
+                }
+            }
+
+            document.getElementById("connectBtn").addEventListener("click", connectWebSocket);
+            document.getElementById("disconnectBtn").addEventListener("click", disconnectWebSocket);
+        </script>
+    </body>
 </html>
