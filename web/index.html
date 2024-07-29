@@ -24,6 +24,11 @@
                 margin-top: 10px;
                 font-weight: bold;
             }
+            #heartrateDisplay,
+            #rrIntervalsDisplay {
+                margin-top: 10px;
+                font-weight: bold;
+            }
         </style>
     </head>
     <body>
@@ -32,6 +37,8 @@
             <button id="connectBtn">Connect</button>
             <button id="disconnectBtn">Disconnect</button>
             <div id="wsStatus">Status: Disconnected</div>
+            <div id="heartrateDisplay">Heart Rate: -- bpm</div>
+            <div id="rrIntervalsDisplay">RR Intervals: -- ms</div>
         </div>
 
         <div class="chart-container">
@@ -177,6 +184,10 @@
                     accChart.data.datasets[1].data = accYData;
                     accChart.data.datasets[2].data = accZData;
                     accChart.update("none"); // 禁用更新动画
+
+                    // 清除心率数据显示
+                    document.getElementById("heartrateDisplay").textContent = "Heart Rate: -- bpm";
+                    document.getElementById("rrIntervalsDisplay").textContent = "RR Intervals: -- ms";
                 };
 
                 socket.onmessage = function (event) {
@@ -185,6 +196,8 @@
                         updateECGChart(message.data.data);
                     } else if (message.type === "acc") {
                         updateACCChart(message.data.data);
+                    } else if (message.type === "heartrate") {
+                        updateHeartRate(message.data);
                     }
                 };
 
@@ -202,8 +215,15 @@
             function disconnectWebSocket() {
                 if (socket) {
                     socket.close();
-                    document.getElementById("wsStatus").textContent = "Status: Disconnected"; // 更新状态标签
+                    document.getElementById("wsStatus").textContent = "Status: Disconnected";
                 }
+            }
+
+            function updateHeartRate(data) {
+                var heartrate = data.heartrate;
+                var rrIntervals = data.rr_intervals.join(", "); // 将 RR 间隔数组转换为字符串
+                document.getElementById("heartrateDisplay").textContent = "Heart Rate: " + heartrate + " bpm";
+                document.getElementById("rrIntervalsDisplay").textContent = "RR Intervals: " + rrIntervals + " ms";
             }
 
             document.getElementById("connectBtn").addEventListener("click", connectWebSocket);
