@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Dynamic ECG with Chart.js and WebSocket</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <canvas id="ecgChart"></canvas>
+  <script>
+    var ctx = document.getElementById('ecgChart').getContext('2d');
+    var ecgData = [];
+
+    var ecgChart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: [], // 初始化 x 轴标签
+        datasets: [{
+          label: 'ECG Signal',
+          data: ecgData,
+          borderColor: 'rgba(75, 192, 192, 1)',
+          borderWidth: 1,
+          fill: false,
+          pointRadius: 0,
+          pointHoverRadius: 0
+        }]
+      },
+      options: {
+        animation: false,
+        scales: {
+          x: { title: { display: true, text: 'Sample Index' } },
+          y: { title: { display: true, text: 'Voltage (µV)' } }
+        }
+      }
+    });
+
+    function updateChart(newDataArray) {
+      ecgData.push(...newDataArray);
+      ecgData = ecgData.slice(-400); // 保持数据长度，避免图表过于庞大
+      ecgChart.data.labels = ecgData.map((_, index) => index); // 更新 x 轴标签
+      ecgChart.data.datasets[0].data = ecgData;
+      ecgChart.update('none');
+    }
+
+    var socket = new WebSocket('ws://localhost:8765');
+
+    socket.onopen = function(event) {
+      console.log('WebSocket is connected.');
+    };
+
+    socket.onmessage = function(event) {
+      var message = JSON.parse(event.data);
+      if (message.type === 'ecg') {
+        updateChart(message.data.data);
+      }
+    };
+
+    socket.onclose = function(event) {
+      console.log('WebSocket is closed.');
+    };
+
+    socket.onerror = function(error) {
+      console.log('WebSocket error:', error);
+    };
+  </script>
+</body>
+</html>
