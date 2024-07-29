@@ -160,7 +160,23 @@
 
                 socket.onopen = function (event) {
                     console.log("WebSocket is connected.");
-                    document.getElementById("wsStatus").textContent = "Status: Connected"; // 更新状态标签
+                    document.getElementById("wsStatus").textContent = "Status: Connected";
+
+                    // 清除先前的 ECG 数据
+                    ecgData = Array.from({ length: 1000 }, () => 0);
+                    ecgChart.data.labels = ecgData.map((_, index) => index);
+                    ecgChart.data.datasets[0].data = ecgData;
+                    ecgChart.update("none"); // 禁用更新动画
+
+                    // 清除先前的加速度数据
+                    accXData = Array.from({ length: 1000 }, () => 0);
+                    accYData = Array.from({ length: 1000 }, () => 0);
+                    accZData = Array.from({ length: 1000 }, () => 0);
+                    accChart.data.labels = accXData.map((_, index) => index);
+                    accChart.data.datasets[0].data = accXData;
+                    accChart.data.datasets[1].data = accYData;
+                    accChart.data.datasets[2].data = accZData;
+                    accChart.update("none"); // 禁用更新动画
                 };
 
                 socket.onmessage = function (event) {
@@ -174,12 +190,12 @@
 
                 socket.onclose = function (event) {
                     console.log("WebSocket is closed.");
-                    document.getElementById("wsStatus").textContent = "Status: Disconnected"; // 更新状态标签
+                    document.getElementById("wsStatus").textContent = "Status: Disconnected";
                 };
 
                 socket.onerror = function (error) {
                     console.log("WebSocket error:", error);
-                    document.getElementById("wsStatus").textContent = "Status: Error"; // 更新状态标签
+                    document.getElementById("wsStatus").textContent = "Status: Error";
                 };
             }
 
