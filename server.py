@@ -3,8 +3,11 @@ import websockets
 import threading
 import signal
 import json
+import os
+import webbrowser
 
 from typing import Union
+from aiohttp import web
 from bleak import BleakScanner
 from rich.console import Console
 from rich import inspect
@@ -21,6 +24,25 @@ from dataclasses import asdict
 connected_clients = set()
 console = Console()
 exit_event = threading.Event()
+
+async def handle(request):
+    filename = request.match_info.get('filename', 'index.html')
+    if filename == '' or filename == 'favicon.ico':
+        filename = 'index.html'
+    file_path = os.path.join('./web', filename)
+    if os.path.exists(file_path) and os.path.isfile(file_path):
+        return web.FileResponse(file_path)
+    else:
+        raise web.HTTPNotFound()
+
+async def web_main():
+    app = web.Application()
+    app.router.add_get('/{filename:.*}', handle)
+    runner = web.AppRunner(app)
+    await runner.setup()
+    site = web.TCPSite(runner, '0.0.0.0', 8080)
+    await site.start()
+    webbrowser.open("http://localhost:8080")
 
 
 def handle_exit(signum, frame):
@@ -44,7 +66,7 @@ async def broadcast_message(message):
         await asyncio.gather(*[client.send(message) for client in connected_clients])
 
 
-async def server_main():
+async def socket_main():
     async with websockets.serve(handle_client, "localhost", 8765):
         while not exit_event.is_set():
             await asyncio.sleep(1)
@@ -104,7 +126,7 @@ async def polar_main():
 async def run():
     signal.signal(signal.SIGINT, handle_exit)
     signal.signal(signal.SIGTERM, handle_exit)
-    await asyncio.gather(server_main(), polar_main())
+    await asyncio.gather(socket_main(), polar_main(), web_main())
 
 
 if __name__ == "__main__":
