@@ -1,0 +1,24 @@
+.controls {
+    margin-bottom: 20px;
+}
+.controls input {
+    margin-right: 10px;
+}
+.controls button {
+    margin-right: 10px;
+}
+.chart-container {
+    position: relative;
+    margin-bottom: 5vh;
+    height: 40vh;
+    width: 100vw;
+}
+#wsStatus {
+    margin-top: 10px;
+    font-weight: bold;
+}
+#heartrateDisplay,
+#rrIntervalsDisplay {
+    margin-top: 10px;
+    font-weight: bold;
+}
