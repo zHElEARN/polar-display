@@ -34,6 +34,10 @@
 
 3. Open your web browser and navigate to `http://localhost:8080` to see the real-time ECG and ACC charts.
 
+## License
+
+This project is licensed under the MIT License. See the LICENSE file for details.
+
 ## Acknowledgements
 
 -   [polar-python](https://pypi.org/project/polar-python/): Library for interacting with Polar H10 devices
