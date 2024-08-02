@@ -10,7 +10,11 @@ const {
     RightAlignedOuterVerticallyStackedAxisLayoutStrategy,
 } = SciChart;
 
-const heartRateValue = document.getElementById("ecg");
+const hrValue = document.getElementById("hr-value");
+const rriValue = document.getElementById("hr-rri");
+const accValueX = document.getElementById("acc-x");
+const accValueY = document.getElementById("acc-y");
+const accValueZ = document.getElementById("acc-z");
 
 const WEBSOCKET_URL = "ws://127.0.0.1:8765/";
 const POINTS_LOOP = 800;
@@ -84,10 +88,10 @@ const initSciECGChart = async () => {
 
 const initSciACCChart = async () => {
     const { sciChartSurface, wasmContext } = await SciChartSurface.create("scichart-acc-root");
-    sciChartSurface.watermarkPosition = EWatermarkPosition.ButtonLeft;
+    sciChartSurface.watermarkPosition = EWatermarkPosition.TopLeft;
 
     const xAxis = new CategoryAxis(wasmContext, {
-        visibleRange: new NumberRange(0, POINTS_LOOP / 2),
+        visibleRange: new NumberRange(0, POINTS_LOOP),
         isVisible: false,
     });
     sciChartSurface.xAxes.add(xAxis);
@@ -165,14 +169,22 @@ socket.onmessage = (event) => {
         pendingECGData.push(...ecgData);
     } else if (message.type === "acc") {
         const accData = message.data.data;
+        accValueX.innerHTML = accData[0][0];
+        accValueY.innerHTML = accData[0][1];
+        accValueZ.innerHTML = accData[0][2];
         accData.forEach((d) => {
             pendingACCDataX.push(d[0]);
             pendingACCDataY.push(d[1]);
             pendingACCDataZ.push(d[2]);
         });
     } else if (message.type === "heartrate") {
-        const heartrate = message.data.heartrate;
-        heartRateValue.innerHTML = heartrate;
+        const hrData = message.data;
+        hrValue.innerHTML = hrData.heartrate;
+        if (hrData.rr_intervals.length === 0) {
+            rriValue.innerText = "-- ms";
+        } else {
+            rriValue.innerHTML = hrData.rr_intervals.join(", ") + " ms";
+        }
     }
 };
 socket.onclose = () => {

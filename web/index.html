@@ -5,58 +5,70 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>Document</title>
         <style>
-            @font-face {
-                font-family: "Politik";
-                src: url(./Politik.otf);
-            }
-
             body {
                 margin: 0;
+                font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
             }
             .container {
                 display: flex;
                 flex-wrap: nowrap;
-                background: radial-gradient(circle, rgb(60, 60, 63) 0%, rgb(28, 28, 30) 100%);
-                border-bottom: .1vh solid white;
+                /*background: radial-gradient(circle, rgb(60, 60, 63) 0%, rgb(28, 28, 30) 100%);*/
+                background-color: black;
+                border-bottom: 0.1vh solid white;
             }
-            #scichart-ecg-root, #scichart-acc-root {
+            #scichart-ecg-root {
                 width: 85vw;
                 height: 20vh;
                 background: none !important;
             }
             #scichart-acc-root {
+                width: 85vw;
                 height: 30vh;
+                background: none !important;
             }
-            .data {
+            .data-card {
                 width: 15vw;
-                font-family: "Politik";
+                /*background-color: aqua;*/
+                color: white;
+            }
+            #hr-label {
+                font-size: 1rem;
                 color: rgb(0, 255, 0);
-                padding-left: 2vw;
             }
-            .label {
-                height: 5vh;
-                font-size: 2rem;
-                font-family: "Politik";
-                vertical-align: middle;
-                line-height: 5vh;
+            #hr-value {
+                font-size: 5rem;
+                color: rgb(0, 255, 0);
             }
-            .value {
-                font-size: 6rem;
+            #hr-rri {
+                font-size: 1.5rem;
+                color: rgb(0, 255, 0);
+            }
+            #acc-label {
+                font-size: 1rem;
+                color: rgb(76, 209, 224);
+            }
+            .acc-value {
+                font-size: 3.5rem;
+                color: rgb(76, 209, 224);
             }
         </style>
     </head>
     <body>
         <div class="container">
             <div id="scichart-ecg-root"></div>
-            <div class="data">
-                <div class="label">HR</div>
-                <div class="value" id="ecg">--</div>
+            <div class="data-card">
+                <div id="hr-label">HR (bpm)</div>
+                <div id="hr-value">--</div>
+                <div id="hr-rri">-- ms</div>
             </div>
         </div>
         <div class="container">
             <div id="scichart-acc-root"></div>
-            <div class="data">
-                <div class="label">ACC</div>
+            <div class="data-card">
+                <div id="acc-label">Acceleration (mG)</div>
+                <div class="acc-value" id="acc-x">--</div>
+                <div class="acc-value" id="acc-y">--</div>
+                <div class="acc-value" id="acc-z">--</div>
             </div>
         </div>
     </body>
