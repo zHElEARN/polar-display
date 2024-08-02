@@ -9,19 +9,19 @@ const {
     SciChartJSDarkv2Theme,
     NumberRange,
     CategoryAxis,
+    EWatermarkPosition
 } = SciChart;
+
+const heartRateValue = document.getElementsByClassName("value")[0];
 
 const WEBSOCKET_URL = "ws://127.0.0.1:8765/";
 
 let currentPoint = 0;
 const POINTS_LOOP = 800;
-const GAP_POINTS = 30;
+const GAP_POINTS = 20;
 const STEP = 10;
-const REFRESH_INTERVAL = 1000 / 130 * STEP;
 
 const pendingData = [];
-let lastUpdateTime = performance.now();
-const updateInterval = 1000 / 130;
 
 const getValuesFromData = () => {
     const xArr = [];
@@ -42,6 +42,8 @@ const initSciChart = async () => {
         theme: new SciChartJSDarkv2Theme(),
     });
 
+    sciChartSurface.watermarkPosition = EWatermarkPosition.TopLeft;
+
     const xAxis = new CategoryAxis(wasmContext, {
         visibleRange: new NumberRange(0, POINTS_LOOP),
         isVisible: false,
@@ -51,7 +53,7 @@ const initSciChart = async () => {
     const yAxisECG = new NumericAxis(wasmContext, {
         id: "yECG",
         visibleRange: new NumberRange(-1000, 2000),
-        isVisible: true,
+        isVisible: false,
     });
     sciChartSurface.yAxes.add(yAxisECG);
 
@@ -59,7 +61,7 @@ const initSciChart = async () => {
         width: 7,
         height: 7,
         strokeThickness: 2,
-        fill: "#83d2f5",
+        fill: "#00FF00",
         lastPointOnly: true,
     };
     const fifoSweepingGap = GAP_POINTS;
@@ -73,9 +75,9 @@ const initSciChart = async () => {
         new FastLineRenderableSeries(wasmContext, {
             yAxisId: yAxisECG.id,
             strokeThickness: 4,
-            stroke: "#f2f195",
+            stroke: "#00FF00",
             dataSeries: ecgDataSeries,
-            pointMarker: new EllipsePointMarker(wasmContext, { ...pointMarkerOptions, stroke: "#f2f195" }),
+            pointMarker: new EllipsePointMarker(wasmContext, { ...pointMarkerOptions, stroke: "#00FF00" }),
         })
     );
 
@@ -91,6 +93,10 @@ const initSciChart = async () => {
             const ecgData = message.data.data;
             pendingData.push(...ecgData);
         }
+        else if (message.type === "heartrate") {
+            const heartrate = message.data.heartrate;
+            heartRateValue.innerHTML = heartrate;
+        }
     };
 
     socket.onclose = () => {
@@ -102,12 +108,8 @@ const initSciChart = async () => {
     };
 
     const updateData = () => {
-        const now = performance.now();
-        if (now - lastUpdateTime >= updateInterval && pendingData.length > 0) {
-            const { xArr, ecgArr } = getValuesFromData();
-            ecgDataSeries.appendRange(xArr, ecgArr);
-            lastUpdateTime = now;
-        }
+        const { xArr, ecgArr } = getValuesFromData();
+        ecgDataSeries.appendRange(xArr, ecgArr);
         requestAnimationFrame(updateData);
     };
 
