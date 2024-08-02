@@ -14,8 +14,8 @@ const heartRateValue = document.getElementById("ecg");
 
 const WEBSOCKET_URL = "ws://127.0.0.1:8765/";
 const POINTS_LOOP = 800;
-const GAP_POINTS = 20;
-const STEP = 10;
+const GAP_POINTS = 15;
+const STEP = 1;
 
 const pointMarkerOptions = {
     width: 0,
@@ -68,7 +68,7 @@ const initSciECGChart = async () => {
         new FastLineRenderableSeries(wasmContext, {
             yAxisId: yAxisECG.id,
             strokeThickness: 4,
-            stroke: "#8A2BE2",
+            stroke: "#00FF00",
             dataSeries: ecgDataSeries,
             pointMarker: new EllipsePointMarker(wasmContext, pointMarkerOptions),
         })
@@ -87,7 +87,7 @@ const initSciACCChart = async () => {
     sciChartSurface.watermarkPosition = EWatermarkPosition.ButtonLeft;
 
     const xAxis = new CategoryAxis(wasmContext, {
-        visibleRange: new NumberRange(0, POINTS_LOOP),
+        visibleRange: new NumberRange(0, POINTS_LOOP / 2),
         isVisible: false,
     });
     sciChartSurface.xAxes.add(xAxis);
@@ -144,9 +144,11 @@ const initSciACCChart = async () => {
             const { xArr, yArr: accArrZ } = getValuesFromData(accCurrentPoint, pendingACCDataZ);
             accDataSeriesZ.appendRange(xArr, accArrZ);
         }
-        requestAnimationFrame(updateData);
+        // requestAnimationFrame(updateData);
+        setTimeout(updateData, 20);
     };
-    requestAnimationFrame(updateData);
+    // requestAnimationFrame(updateData);
+    updateData();
 };
 
 initSciECGChart();
