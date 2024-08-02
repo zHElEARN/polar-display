@@ -17,11 +17,15 @@
                 display: flex;
                 flex-wrap: nowrap;
                 background: radial-gradient(circle, rgb(60, 60, 63) 0%, rgb(28, 28, 30) 100%);
+                border-bottom: .1vh solid white;
             }
-            #scichart-root {
+            #scichart-ecg-root, #scichart-acc-root {
                 width: 85vw;
                 height: 20vh;
                 background: none !important;
+            }
+            #scichart-acc-root {
+                height: 30vh;
             }
             .data {
                 width: 15vw;
@@ -43,10 +47,16 @@
     </head>
     <body>
         <div class="container">
-            <div id="scichart-root"></div>
+            <div id="scichart-ecg-root"></div>
             <div class="data">
                 <div class="label">HR</div>
-                <div class="value">--</div>
+                <div class="value" id="ecg">--</div>
+            </div>
+        </div>
+        <div class="container">
+            <div id="scichart-acc-root"></div>
+            <div class="data">
+                <div class="label">ACC</div>
             </div>
         </div>
     </body>
