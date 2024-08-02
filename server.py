@@ -40,9 +40,9 @@ async def web_main():
     app.router.add_get('/{filename:.*}', handle)
     runner = web.AppRunner(app)
     await runner.setup()
-    site = web.TCPSite(runner, '0.0.0.0', 8080)
+    site = web.TCPSite(runner, '0.0.0.0', 8766)
     await site.start()
-    webbrowser.open("http://localhost:8080")
+    webbrowser.open("http://localhost:8766")
 
 
 def handle_exit(signum, frame):
