@@ -2,26 +2,77 @@
 <html lang="en">
     <head>
         <meta charset="UTF-8" />
-        <title>Dynamic ECG and Acceleration with Chart.js and WebSocket</title>
-        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-        <link rel="stylesheet" href="style.css">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Document</title>
+        <style>
+            body {
+                margin: 0;
+                font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            }
+            .container {
+                display: flex;
+                flex-wrap: nowrap;
+                /*background: radial-gradient(circle, rgb(60, 60, 63) 0%, rgb(28, 28, 30) 100%);*/
+                background-color: black;
+                border-bottom: 0.1vh solid white;
+            }
+            #scichart-ecg-root {
+                width: 85vw;
+                height: 20vh;
+                background: none !important;
+            }
+            #scichart-acc-root {
+                width: 85vw;
+                height: 30vh;
+                background: none !important;
+            }
+            .data-card {
+                width: 15vw;
+                /*background-color: aqua;*/
+                color: white;
+            }
+            #hr-label {
+                font-size: 1rem;
+                color: rgb(0, 255, 0);
+            }
+            #hr-value {
+                font-size: 5rem;
+                color: rgb(0, 255, 0);
+            }
+            #hr-rri {
+                font-size: 1.5rem;
+                color: rgb(0, 255, 0);
+            }
+            #acc-label {
+                font-size: 1rem;
+                color: rgb(76, 209, 224);
+            }
+            .acc-value {
+                font-size: 3.5rem;
+                color: rgb(76, 209, 224);
+            }
+        </style>
     </head>
     <body>
-        <div class="controls">
-            <input type="text" id="wsAddress" placeholder="WebSocket Address" value="ws://localhost:8765" />
-            <button id="connectBtn">Connect</button>
-            <button id="disconnectBtn">Disconnect</button>
-            <div id="wsStatus">Status: Disconnected</div>
-            <div id="heartrateDisplay">Heart Rate: -- bpm</div>
-            <div id="rrIntervalsDisplay">RR Intervals: -- ms</div>
+        <div class="container">
+            <div id="scichart-ecg-root"></div>
+            <div class="data-card">
+                <div id="hr-label">HR (bpm)</div>
+                <div id="hr-value">--</div>
+                <div id="hr-rri">-- ms</div>
+            </div>
         </div>
-
-        <div class="chart-container">
-            <canvas id="ecgChart"></canvas>
+        <div class="container">
+            <div id="scichart-acc-root"></div>
+            <div class="data-card">
+                <div id="acc-label">Acceleration (mG)</div>
+                <div class="acc-value" id="acc-x">--</div>
+                <div class="acc-value" id="acc-y">--</div>
+                <div class="acc-value" id="acc-z">--</div>
+            </div>
         </div>
-        <div class="chart-container">
-            <canvas id="accChart"></canvas>
-        </div>
-        <script src="script.js"></script>
     </body>
+    <script src="https://unpkg.com/mdui@2/mdui.global.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/scichart/index.min.js" crossorigin="anonymous"></script>
+    <script src="index.js"></script>
 </html>
