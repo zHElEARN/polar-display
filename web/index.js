@@ -19,7 +19,7 @@ const accValueZ = document.getElementById("acc-z");
 const WEBSOCKET_URL = "ws://127.0.0.1:8765/";
 const POINTS_LOOP = 800;
 const GAP_POINTS = 15;
-const STEP = 1;
+const STEP = 3;
 
 const pointMarkerOptions = {
     width: 0,
