@@ -5,12 +5,14 @@ import signal
 import json
 import os
 import webbrowser
+import numpy
 
 from typing import Union
 from aiohttp import web
 from bleak import BleakScanner
 from rich.console import Console
 from rich import inspect
+from datetime import datetime
 from polar_python import (
     PolarDevice,
     MeasurementSettings,
@@ -82,6 +84,8 @@ async def polar_main():
 
     inspect(device)
 
+    ecg_data = []
+
     def heartrate_callback(data: HRData):
         console.print(f"[bold green]Received Data:[/bold green] {data}")
         loop = asyncio.get_event_loop()
@@ -95,6 +99,8 @@ async def polar_main():
         loop.create_task(
             broadcast_message(json.dumps({"type": "ecg" if isinstance(data, ECGData) else "acc", "data": asdict(data)}))
         )
+        if isinstance(data, ECGData):
+            ecg_data.extend(data.data)
 
     async with PolarDevice(device, data_callback, heartrate_callback) as polar_device:
         ecg_settings = MeasurementSettings(
@@ -121,6 +127,10 @@ async def polar_main():
 
         while not exit_event.is_set():
             await asyncio.sleep(1)
+
+        if not os.path.exists("logs"):
+            os.makedirs("logs")
+        numpy.save(f"logs/{datetime.now().strftime("%Y%m%d-%H%M%S")}", ecg_data)
 
 
 async def run():
