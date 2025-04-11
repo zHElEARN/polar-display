@@ -1,78 +1,286 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Document</title>
-        <style>
-            body {
-                margin: 0;
-                font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-            }
-            .container {
-                display: flex;
-                flex-wrap: nowrap;
-                /*background: radial-gradient(circle, rgb(60, 60, 63) 0%, rgb(28, 28, 30) 100%);*/
-                background-color: black;
-                border-bottom: 0.1vh solid white;
-            }
-            #scichart-ecg-root {
-                width: 85vw;
-                height: 20vh;
-                background: none !important;
-            }
-            #scichart-acc-root {
-                width: 85vw;
-                height: 30vh;
-                background: none !important;
-            }
-            .data-card {
-                width: 15vw;
-                /*background-color: aqua;*/
-                color: white;
-            }
-            #hr-label {
-                font-size: 1rem;
-                color: rgb(0, 255, 0);
-            }
-            #hr-value {
-                font-size: 5rem;
-                color: rgb(0, 255, 0);
-            }
-            #hr-rri {
-                font-size: 1.5rem;
-                color: rgb(0, 255, 0);
-            }
-            #acc-label {
-                font-size: 1rem;
-                color: rgb(76, 209, 224);
-            }
-            .acc-value {
-                font-size: 3.5rem;
-                color: rgb(76, 209, 224);
-            }
-        </style>
-    </head>
-    <body>
-        <div class="container">
-            <div id="scichart-ecg-root"></div>
-            <div class="data-card">
-                <div id="hr-label">HR (bpm)</div>
-                <div id="hr-value">--</div>
-                <div id="hr-rri">-- ms</div>
-            </div>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Polar Display</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        background-color: #121212;
+        color: #e0e0e0;
+        height: 100vh;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+      }
+      .chart-container {
+        flex: 1;
+        display: flex;
+        flex-direction: row;
+        background-color: #1e1e1e;
+        padding: 10px;
+        box-sizing: border-box;
+        position: relative;
+        border-bottom: 1px solid #333;
+      }
+      .chart-title {
+        margin: 0;
+        color: #bbbbbb;
+        font-size: 16px;
+        position: absolute;
+        top: 10px;
+        left: 0;
+        right: 0;
+        text-align: center;
+        z-index: 2;
+      }
+      .chart-wrapper {
+        position: relative;
+        width: calc(100% - 120px);
+        flex: 1;
+      }
+      .status {
+        position: fixed;
+        top: 50%;
+        transform: translateY(-50%);
+        right: 10px;
+        padding: 8px 12px;
+        border-radius: 3px;
+        font-size: 14px;
+        z-index: 10;
+      }
+      .connected {
+        background-color: #1b5e20;
+        color: white;
+      }
+      .disconnected {
+        background-color: #b71c1c;
+        color: white;
+      }
+      .info-panel {
+        width: 160px;
+        background-color: rgba(30, 30, 30, 0.7);
+        border-left: 1px solid #333;
+        margin-left: 10px;
+        padding: 10px;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        box-sizing: border-box;
+      }
+      .info-item {
+        margin-bottom: 15px;
+        display: flex;
+        flex-direction: column;
+      }
+      .info-label {
+        color: #999;
+        font-size: 18px; /* 增大标签字体 */
+        margin-bottom: 6px;
+      }
+      .info-value {
+        font-size: 28px; /* 增大值字体 */
+        font-weight: bold;
+      }
+      .heart-rate {
+        color: #ff5252;
+      }
+      .ecg-value {
+        color: #00e676;
+      }
+      .acc-x {
+        color: #ff9e80;
+      }
+      .acc-y {
+        color: #80d8ff;
+      }
+      .acc-z {
+        color: #b388ff;
+      }
+      .rr-intervals {
+        max-height: 100px;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        margin-top: 5px;
+        scrollbar-width: thin;
+        scrollbar-color: #555 #333;
+        font-size: 24px;
+      }
+      .rr-intervals::-webkit-scrollbar {
+        width: 6px;
+      }
+      .rr-intervals::-webkit-scrollbar-track {
+        background: #333;
+        border-radius: 4px;
+      }
+      .rr-intervals::-webkit-scrollbar-thumb {
+        background-color: #555;
+        border-radius: 4px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="status" class="status disconnected">Disconnected</div>
+
+    <div class="chart-container">
+      <h2 class="chart-title">ECG Monitor (μV)</h2>
+      <div id="ecg-chart" class="chart-wrapper"></div>
+      <div class="info-panel">
+        <div class="info-item">
+          <span class="info-label">Heart Rate</span>
+          <span id="heart-rate" class="info-value heart-rate">--</span>
         </div>
-        <div class="container">
-            <div id="scichart-acc-root"></div>
-            <div class="data-card">
-                <div id="acc-label">Acceleration (mG)</div>
-                <div class="acc-value" id="acc-x">--</div>
-                <div class="acc-value" id="acc-y">--</div>
-                <div class="acc-value" id="acc-z">--</div>
-            </div>
+        <div class="info-item">
+          <span class="info-label">ECG Value</span>
+          <span id="ecg-value" class="info-value ecg-value">--</span>
         </div>
-    </body>
-    <script src="https://unpkg.com/mdui@2/mdui.global.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/scichart/index.min.js" crossorigin="anonymous"></script>
-    <script src="index.js"></script>
+        <div class="info-item">
+          <span class="info-label">RR Intervals</span>
+          <div id="rr-intervals" class="rr-intervals">--</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="chart-container">
+      <h2 class="chart-title">Accelerometer (mG)</h2>
+      <div id="acc-chart" class="chart-wrapper"></div>
+      <div class="info-panel">
+        <div class="info-item">
+          <span class="info-label">X-Axis</span>
+          <span id="acc-x" class="info-value acc-x">--</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Y-Axis</span>
+          <span id="acc-y" class="info-value acc-y">--</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Z-Axis</span>
+          <span id="acc-z" class="info-value acc-z">--</span>
+        </div>
+      </div>
+    </div>
+
+    <script src="utils.js"></script>
+    <script src="charts.js"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        // 初始化图表
+        const ecgChart = new ECGChart(
+          document.getElementById("ecg-chart"),
+          [],
+          window.innerHeight / 2 - 30
+        );
+
+        const accChart = new ACCChart(
+          document.getElementById("acc-chart"),
+          [],
+          window.innerHeight / 2 - 30,
+          25,
+          2
+        );
+
+        // 获取信息面板元素
+        const heartRateElement = document.getElementById("heart-rate");
+        const rrIntervalsElement = document.getElementById("rr-intervals"); // 改为复数
+        const ecgValueElement = document.getElementById("ecg-value");
+        const accXElement = document.getElementById("acc-x");
+        const accYElement = document.getElementById("acc-y");
+        const accZElement = document.getElementById("acc-z");
+
+        // 处理窗口大小改变
+        window.addEventListener('resize', () => {
+          if (ecgChart.chart && typeof ecgChart.chart.updateHeight === 'function') {
+            ecgChart.chart.updateHeight(window.innerHeight / 2 - 30);
+          }
+          
+          if (accChart.chart && typeof accChart.chart.updateHeight === 'function') {
+            accChart.chart.updateHeight(window.innerHeight / 2 - 30);
+          }
+        });
+
+        // WebSocket连接
+        let ws = null;
+        const statusElement = document.getElementById("status");
+
+        function connectWebSocket() {
+          ws = new WebSocket("ws://127.0.0.1:8765/");
+
+          ws.onopen = () => {
+            statusElement.textContent = "Connected";
+            statusElement.className = "status connected";
+            console.log("WebSocket connected");
+          };
+
+          ws.onmessage = (event) => {
+            try {
+              const message = JSON.parse(event.data);
+
+              if (message.type === "ecg" && message.data && Array.isArray(message.data.data)) {
+                // 更新ECG图表
+                ecgChart.updateData(message.data.data);
+                
+                // 更新ECG值显示
+                if (message.data.data.length > 0) {
+                  ecgValueElement.textContent = `${message.data.data[0]} μV`;
+                }
+              } 
+              else if (message.type === "acc" && message.data && Array.isArray(message.data.data)) {
+                // 转换加速度数据格式
+                const formattedData = message.data.data.map((point) => ({
+                  x: point[0],
+                  y: point[1],
+                  z: point[2],
+                }));
+                
+                // 更新加速度图表
+                accChart.updateData(formattedData);
+                
+                // 更新加速度值显示
+                if (formattedData.length > 0) {
+                  const firstPoint = formattedData[0];
+                  accXElement.textContent = `${firstPoint.x} mG`;
+                  accYElement.textContent = `${firstPoint.y} mG`;
+                  accZElement.textContent = `${firstPoint.z} mG`;
+                }
+              }
+              else if (message.type === "heartrate" && message.data) {
+                // 更新心率显示
+                if (message.data.heartrate) {
+                  heartRateElement.textContent = `${message.data.heartrate} BPM`;
+                }
+                
+                // 更新所有RR间隔显示
+                if (message.data.rr_intervals && message.data.rr_intervals.length > 0) {
+                  const firstInterval = message.data.rr_intervals[0];
+                  rrIntervalsElement.textContent = `${Math.round(firstInterval)} ms`;
+                }
+              }
+            } catch (error) {
+              console.error("Error processing WebSocket message:", error);
+            }
+          };
+
+          ws.onclose = () => {
+            statusElement.textContent = "Disconnected";
+            statusElement.className = "status disconnected";
+            console.log("WebSocket disconnected, trying to reconnect...");
+            setTimeout(connectWebSocket, 2000);
+          };
+
+          ws.onerror = (error) => {
+            console.error("WebSocket error:", error);
+            ws.close();
+          };
+        }
+
+        // 初始连接
+        connectWebSocket();
+      });
+    </script>
+  </body>
 </html>
